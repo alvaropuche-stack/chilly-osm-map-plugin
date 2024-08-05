@@ -1,8 +1,9 @@
 name: Build and Deploy Plugin
 
 on:
-  release:
-    types: [published]
+  push:
+    branches:
+      - main  # O la rama principal de tu repositorio
 
 jobs:
   build:
