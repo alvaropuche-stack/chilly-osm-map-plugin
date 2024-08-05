@@ -23,11 +23,11 @@ jobs:
     - name: Install lftp
       run: sudo apt-get install -y lftp
 
-    - name: Upload ZIP to server via FTP
+    - name: Upload ZIP to server via SFTP
       env:
         FTP_SERVER: ${{ secrets.FTP_SERVER }}
         FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
         FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
         FTP_REMOTE_PATH: ${{ secrets.FTP_REMOTE_PATH }}
       run: |
-        lftp -c "open -u $FTP_USERNAME,$FTP_PASSWORD $FTP_SERVER; put -O $FTP_REMOTE_PATH osm-map-plugin.zip"
+        lftp -c "set sftp:auto-confirm yes; open -u $FTP_USERNAME,$FTP_PASSWORD sftp://$FTP_SERVER; put -O $FTP_REMOTE_PATH osm-map-plugin.zip"
