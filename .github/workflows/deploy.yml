@@ -62,5 +62,5 @@ jobs:
 
           # Send update request to plugins-control server
           response=$(curl -X POST -F "plugin_name=$plugin_name" -F "new_version=$new_version" -F "zip_file=@$zip" https://plugins-control.chillypills.com/deploy.php)
-          echo "Response from servr: $response"
+          echo "Response from server: $response"
         done
