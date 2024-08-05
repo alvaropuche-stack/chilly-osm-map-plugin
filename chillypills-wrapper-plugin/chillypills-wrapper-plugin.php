@@ -206,24 +206,28 @@ class Chillypills_Wrapper_Plugin {
 
         // Definir el directorio temporal y el destino del plugin
         $destination = WP_PLUGIN_DIR . '/' . $plugin_slug;
+
+        // Descomprimir el archivo ZIP
         $unzip_result = unzip_file($tmp_file, WP_PLUGIN_DIR);
 
         if (is_wp_error($unzip_result)) {
+            $wp_filesystem->delete($tmp_file);
             wp_die('Error al instalar el plugin: ' . esc_html($unzip_result->get_error_message()));
         }
 
         // Eliminar el archivo temporal
         $wp_filesystem->delete($tmp_file);
 
-        // Activar el plugin si se ha descargado correctamente
+        // Verificar si el plugin se ha instalado correctamente
         $plugin_file = $plugin_slug . '/' . $plugin_slug . '.php';
-        if (file_exists(WP_PLUGIN_DIR . '/' . $plugin_file)) {
-            activate_plugin($plugin_file);
-            wp_redirect(admin_url('admin.php?page=chillypills-plugins-management&installed=' . $plugin_slug));
-            exit;
-        } else {
+        if (!file_exists(WP_PLUGIN_DIR . '/' . $plugin_file)) {
             wp_die('El archivo del plugin no se encontró después de la instalación.');
         }
+
+        // Activar el plugin
+        activate_plugin($plugin_file);
+        wp_redirect(admin_url('admin.php?page=chillypills-plugins-management&installed=' . $plugin_slug));
+        exit;
     }
 
     public function enqueue_styles() {
