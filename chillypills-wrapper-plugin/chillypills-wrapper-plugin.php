@@ -75,7 +75,23 @@ class Chillypills_Wrapper_Plugin {
     }
 
     public function plugins_management_page() {
+        $plugins_json_url = 'https://plugins-control.chillypills.com/plugins.json'; // URL del archivo plugins.json
+        $response = wp_remote_get($plugins_json_url);
+
+        if (is_wp_error($response)) {
+            echo '<div class="error"><p>Error al obtener la lista de plugins.</p></div>';
+            return;
+        }
+
+        $plugins_data = json_decode(wp_remote_retrieve_body($response), true);
+        if (!isset($plugins_data['plugins'])) {
+            echo '<div class="error"><p>No se encontró la información de plugins.</p></div>';
+            return;
+        }
+
+        $chillypills_plugins = $plugins_data['plugins'];
         $installed_plugins = get_plugins();
+
         ?>
         <div class="wrap">
             <h1>Gestión de Plugins Chillypills</h1>
@@ -88,10 +104,16 @@ class Chillypills_Wrapper_Plugin {
                     </tr>
                 </thead>
                 <tbody>
-                    <?php foreach ($installed_plugins as $plugin_file => $plugin_data): ?>
+                    <?php foreach ($chillypills_plugins as $plugin_slug => $plugin_data): ?>
+                        <?php
+                        $plugin_file = $plugin_slug . '/' . $plugin_slug . '.php';
+                        $plugin_info = isset($installed_plugins[$plugin_file]) ? $installed_plugins[$plugin_file] : null;
+                        ?>
                         <tr>
-                            <td class="plugin-title"><strong><?php echo esc_html($plugin_data['Name']); ?></strong></td>
-                            <td class="column-description"><?php echo esc_html($plugin_data['Description']); ?></td>
+                            <td class="plugin-title">
+                                <strong><?php echo esc_html($plugin_info['Name'] ?? $plugin_slug); ?></strong>
+                            </td>
+                            <td class="column-description"><?php echo esc_html($plugin_info['Description'] ?? 'No disponible'); ?></td>
                             <td class="column-actions">
                                 <?php if (is_plugin_active($plugin_file)): ?>
                                     <a href="<?php echo esc_url(wp_nonce_url('plugins.php?action=deactivate&amp;plugin=' . $plugin_file, 'deactivate-plugin_' . $plugin_file)); ?>" class="button">Desactivar</a>
