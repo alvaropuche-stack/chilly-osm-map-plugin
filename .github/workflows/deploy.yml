@@ -40,8 +40,8 @@ jobs:
         FTP_REMOTE_PATH: ${{ secrets.FTP_REMOTE_PATH }}
       run: |
         for zip in *.zip; do
-          # Upload the ZIP file
-          lftp -c "set sftp:auto-confirm yes; open -u $FTP_USERNAME,$FTP_PASSWORD sftp://$FTP_SERVER; put -O $FTP_REMOTE_PATH $zip"
+          # Upload the ZIP file to /downloads directory
+          lftp -c "set sftp:auto-confirm yes; open -u $FTP_USERNAME,$FTP_PASSWORD sftp://$FTP_SERVER; put -O $FTP_REMOTE_PATH/downloads $zip"
           
           # Prepare for version update
           plugin_name=$(basename "$zip" .zip)
@@ -60,7 +60,6 @@ jobs:
           # Debugging output
           echo "Updating $plugin_name to version $new_version"
 
-          # Update plugins.json
-          response=$(curl -X POST -F "plugin_name=$plugin_name" -F "new_version=$new_version" -F "zip_file=@$zip" https://plugins-control.chillypills.com/deploy.php)
-          echo "Response from server: $response"
+          # Update plugins.json in the parent directory
+          lftp -c "set sftp:auto-confirm yes; open -u $FTP_USERNAME,$FTP_PASSWORD sftp://$FTP_SERVER; put -O $FTP_REMOTE_PATH plugins.json -a"
         done
