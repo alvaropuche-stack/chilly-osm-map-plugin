@@ -21,9 +21,13 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y unzip
+          sudo apt-get install -y unzip curl
 
-      - name: Fetch and deploy plugins
+      - name: Download deploy.php
+        run: |
+          curl -O https://plugins-control.chillypills.com/deploy.php
+
+      - name: Execute deploy.php
         run: |
           php deploy.php
         env:
