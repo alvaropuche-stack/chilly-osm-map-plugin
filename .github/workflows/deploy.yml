@@ -21,8 +21,12 @@ jobs:
       - name: Install dependencies
         run: sudo apt-get install -y curl
 
-      - name: Trigger deployment
+      - name: Upload plugin
         run: |
+          # Make sure the plugin file exists in the specified path
+          ls -l path/to/your/plugin.zip
+
+          # Upload the file using curl
           curl -X POST https://plugins-control.chillypills.com/deploy.php \
                -F 'plugin_name=osm-map-plugin' \
                -F 'new_version=1.1.0' \
