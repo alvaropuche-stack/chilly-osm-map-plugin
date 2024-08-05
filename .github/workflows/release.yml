@@ -20,10 +20,14 @@ jobs:
     - name: Zip the plugin
       run: zip -r osm-map-plugin.zip osm-map-plugin
 
-    - name: Upload ZIP to server
+    - name: Install lftp
+      run: sudo apt-get install -y lftp
+
+    - name: Upload ZIP to server via FTP
       env:
-        SERVER_URL: ${{ secrets.SERVER_URL }}
-        SERVER_USERNAME: ${{ secrets.SERVER_USERNAME }}
-        SERVER_PASSWORD: ${{ secrets.SERVER_PASSWORD }}
+        FTP_SERVER: ${{ secrets.FTP_SERVER }}
+        FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
+        FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
+        FTP_REMOTE_PATH: ${{ secrets.FTP_REMOTE_PATH }}
       run: |
-        curl -T osm-map-plugin.zip -u $SERVER_USERNAME:$SERVER_PASSWORD $SERVER_URL/deploy.php?plugin_name=osm-map-plugin&new_version=${{ github.event.release.tag_name }}
+        lftp -c "open -u $FTP_USERNAME,$FTP_PASSWORD $FTP_SERVER; put -O $FTP_REMOTE_PATH osm-map-plugin.zip"
