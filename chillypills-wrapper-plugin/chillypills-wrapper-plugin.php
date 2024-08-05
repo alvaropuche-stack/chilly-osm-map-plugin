@@ -156,7 +156,7 @@ class Chillypills_Wrapper_Plugin {
         $response = wp_remote_get($plugins_json_url);
 
         if (is_wp_error($response)) {
-            wp_die('Error al obtener la lista de plugins.');
+            wp_die('Error al obtener la lista de plugins: ' . esc_html($response->get_error_message()));
         }
 
         $plugins_data = json_decode(wp_remote_retrieve_body($response), true);
@@ -165,25 +165,40 @@ class Chillypills_Wrapper_Plugin {
         }
 
         $plugin_data = $plugins_data['plugins'][$plugin_slug];
-        $download_url = $plugin_data['download_url'];
+        $download_url = isset($plugin_data['download_url']) ? esc_url_raw($plugin_data['download_url']) : '';
 
-        $tmp_file = download_url($download_url);
-        if (is_wp_error($tmp_file)) {
-            wp_die('Error al descargar el plugin.');
+        if (empty($download_url)) {
+            wp_die('No se ha facilitado una URL válida para la descarga.');
         }
 
+        // Mostrar mensaje de inicio de descarga
+        echo '<div class="wrap">';
+        echo '<h2>Descargando e Instalando Plugin</h2>';
+        echo '<p>Descargando el plugin desde: ' . esc_html($download_url) . '</p>';
+
+        // Descargar el archivo ZIP
+        $tmp_file = download_url($download_url);
+        if (is_wp_error($tmp_file)) {
+            wp_die('Error al descargar el plugin: ' . esc_html($tmp_file->get_error_message()));
+        }
+
+        // Descomprimir el archivo ZIP
         $plugin_dir = WP_PLUGIN_DIR . '/' . $plugin_slug;
         $unzip_result = unzip_file($tmp_file, $plugin_dir);
 
         if (is_wp_error($unzip_result)) {
-            wp_die('Error al instalar el plugin.');
+            wp_die('Error al instalar el plugin: ' . esc_html($unzip_result->get_error_message()));
         }
 
+        // Eliminar el archivo temporal
         unlink($tmp_file);
 
         // Activar el plugin si se ha descargado correctamente
         $plugin_file = $plugin_slug . '/' . $plugin_slug . '.php';
         activate_plugin($plugin_file);
+
+        echo '<p>El plugin se ha instalado y activado correctamente.</p>';
+        echo '</div>';
 
         wp_redirect(admin_url('admin.php?page=chillypills-plugins-management'));
         exit;
