@@ -1,0 +1,29 @@
+name: Build and Deploy Plugin
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Check out the repository
+      uses: actions/checkout@v2
+
+    - name: Set up PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: 7.4
+
+    - name: Zip the plugin
+      run: zip -r osm-map-plugin.zip osm-map-plugin
+
+    - name: Upload ZIP to server
+      env:
+        SERVER_URL: ${{ secrets.SERVER_URL }}
+        SERVER_USERNAME: ${{ secrets.SERVER_USERNAME }}
+        SERVER_PASSWORD: ${{ secrets.SERVER_PASSWORD }}
+      run: |
+        curl -T osm-map-plugin.zip -u $SERVER_USERNAME:$SERVER_PASSWORD $SERVER_URL/deploy.php?plugin_name=osm-map-plugin&new_version=${{ github.event.release.tag_name }}
