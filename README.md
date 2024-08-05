@@ -13,7 +13,7 @@ El OSM Map Plugin permite mostrar un mapa de OpenStreetMap con múltiples direcc
 ## Características
 
 - Mostrar un mapa de OpenStreetMap.
-- Configurar múltiples direcciones.
+- Configurar múltiples direcciones..
 - Validación de licencia.
 - Actualizaciones automáticas.
 
