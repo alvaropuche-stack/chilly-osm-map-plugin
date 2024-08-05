@@ -29,8 +29,8 @@ jobs:
           fi
         done
 
-    - name: Install curl
-      run: sudo apt-get install -y curl
+    - name: Install lftp
+      run: sudo apt-get install -y lftp
 
     - name: Upload ZIPs and update plugins.json
       env:
