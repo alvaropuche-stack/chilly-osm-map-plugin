@@ -1,32 +1,48 @@
-# OSM Map Plugin
+# Chillypills WordPress Plugins
 
-**Plugin Name:** OSM Map Plugin  
-**Description:** Plugin para mostrar un mapa de OpenStreetMap con direcciones configurables.  
-**Version:** 1.0.0  
-**Author:** Álvaro Puche Ortiz x Chillypills Comunicación S.L.  
-**Author URI:** https://chillypills.com  
+Este repositorio contiene múltiples plugins de WordPress desarrollados y mantenidos por Chillypills Comunicación S.L. Cada plugin reside en su propio directorio y se gestiona de forma independiente para facilitar su desarrollo y despliegue.
 
-## Descripción
+## Plugins Disponibles
 
-El OSM Map Plugin permite mostrar un mapa de OpenStreetMap con múltiples direcciones configurables. Además, soporta la validación de licencias y actualizaciones gestionadas desde un servidor central.
+- **Chilly OSM Map Plugin** (`chilly-osm-map-plugin`): Plugin para mostrar un mapa de OpenStreetMap con direcciones configurables.
 
-## Características
+## Estructura del Repositorio
 
-- Mostrar un mapa de OpenStreetMap.
-- Configurar múltiples direcciones..
-- Validación de licencia.
-- Actualizaciones automáticas.
+Cada plugin se encuentra en su propio directorio bajo la raíz del repositorio. La estructura del repositorio es la siguiente:
 
-## Instalación
+## Despliegue Automatizado
 
-1. Sube los archivos del plugin al directorio `/wp-content/plugins/osm-map-plugin`.
-2. Activa el plugin a través del menú 'Plugins' en WordPress.
-3. Ve a `Ajustes > Ajustes del mapa OSM` para configurar tu clave de licencia y direcciones.
+El repositorio está configurado para utilizar GitHub Actions para automatizar el proceso de despliegue de los plugins. Cada vez que se hace un push a la rama principal (`main`), se realiza lo siguiente:
 
-## Uso
+1. **Empaquetado**: Cada directorio de plugin se empaqueta en un archivo ZIP.
+2. **Subida**: Cada archivo ZIP se sube a un servidor SFTP.
+3. **Actualización de `plugins.json`**: Se actualiza el archivo `plugins.json` en el servidor para reflejar la nueva versión del plugin.
 
-- Añade el widget `Chillypills Open Street Map Widget` a tus páginas utilizando Elementor.
-- Configura las direcciones y coordenadas directamente en el widget.
+### Configuración de GitHub Actions
+
+El flujo de trabajo de GitHub Actions se define en `.github/workflows/deploy.yml`. Este flujo de trabajo:
+
+- Empaqueta cada directorio de plugin en un archivo ZIP.
+- Sube cada archivo ZIP al servidor SFTP.
+- Actualiza `plugins.json` en el servidor.
+
+### Secrets
+
+Para que el despliegue automatizado funcione, asegúrate de configurar los siguientes secrets en tu repositorio de GitHub:
+
+- **FTP_SERVER**: Dirección del servidor SFTP.
+- **FTP_USERNAME**: Nombre de usuario para el servidor SFTP.
+- **FTP_PASSWORD**: Contraseña para el servidor SFTP.
+- **FTP_REMOTE_PATH**: Ruta remota en el servidor donde se subirán los archivos ZIP.
+
+## Añadir un Nuevo Plugin
+
+Para añadir un nuevo plugin al repositorio:
+
+1. Crea un nuevo directorio en la raíz del repositorio con el nombre de tu plugin.
+2. Añade los archivos del plugin en el nuevo directorio.
+3. Asegúrate de seguir la estructura y convenciones de los otros plugins.
+4. Realiza un commit y push de los cambios a la rama principal.
 
 ## Soporte
 
@@ -34,4 +50,4 @@ Para soporte, contacta a Chillypills Comunicación S.L. en [https://chillypills.
 
 ## Licencia
 
-Este plugin es propiedad exclusiva de Chillypills Comunicación S.L. y su uso está estrictamente limitado a proyectos autorizados y gestionados por nuestra empresa.
+Este repositorio y sus contenidos 
