@@ -54,5 +54,5 @@ jobs:
           echo "$new_version" > "$version_file"
 
           lftp -c "set sftp:auto-confirm yes; open -u $FTP_USERNAME,$FTP_PASSWORD sftp://$FTP_SERVER; put -O $FTP_REMOTE_PATH $zip"
-          curl -X POST -F "plugin_name=$plugin_name" -F "new_version=$new_version" -F "zip_file=@$zip" https://plugin-control.chillypills.com/deploy.php
+          curl -X POST -F "plugin_name=$plugin_name" -F "new_version=$new_version" -F "zip_file=@$zip" https://plugins-control.chillypills.com/deploy.php
         done
