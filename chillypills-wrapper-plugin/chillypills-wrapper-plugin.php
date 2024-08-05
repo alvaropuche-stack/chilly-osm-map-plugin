@@ -20,6 +20,7 @@ class Chillypills_Wrapper_Plugin {
         add_action('admin_init', array($this, 'register_settings'));
         add_action('admin_enqueue_scripts', array($this, 'enqueue_styles'));
         add_action('admin_post_chillypills_download_plugin', array($this, 'handle_download_plugin'));
+        add_action('admin_post_nopriv_chillypills_download_plugin', array($this, 'handle_download_plugin'));
     }
 
     public function create_menu() {
@@ -140,11 +141,17 @@ class Chillypills_Wrapper_Plugin {
             wp_die('No tienes permisos suficientes para realizar esta acción.');
         }
 
-        if (!isset($_GET['plugin_slug'])) {
-            wp_die('No se especificó el plugin a descargar.');
+        if (!isset($_GET['plugin_slug']) || !isset($_GET['_wpnonce'])) {
+            wp_die('No se especificó el plugin o el nonce.');
         }
 
         $plugin_slug = sanitize_text_field($_GET['plugin_slug']);
+        $nonce = sanitize_text_field($_GET['_wpnonce']);
+
+        if (!wp_verify_nonce($nonce, 'chillypills_download_plugin_' . $plugin_slug)) {
+            wp_die('Nonce inválido.');
+        }
+
         $plugins_json_url = 'https://plugins-control.chillypills.com/plugins.json';
         $response = wp_remote_get($plugins_json_url);
 
