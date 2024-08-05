@@ -11,18 +11,6 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-require_once(plugin_dir_path(__FILE__) . 'license-control.php');
-
-// Función para validar la licencia
-function osm_map_plugin_validate_license($license_key = '') {
-    if (empty($license_key)) {
-        $license_key = get_option('chillypills_license_key');
-    }
-    $site_url = get_site_url();
-
-    return validate_license($license_key, $site_url);
-}
-
 // Función para comprobar actualizaciones
 function osm_map_plugin_check_update($transient) {
     if (empty($transient->checked)) {
@@ -59,18 +47,6 @@ add_action('admin_menu', 'osm_map_plugin_menu');
 
 // Página de configuración del plugin
 function osm_map_plugin_settings_page() {
-    if ($_POST['chillypills_license_key']) {
-        $license_key = sanitize_text_field($_POST['chillypills_license_key']);
-        update_option('chillypills_license_key', $license_key);
-        
-        $validation_result = osm_map_plugin_validate_license($license_key);
-        if ($validation_result['success']) {
-            add_settings_error('osm_map_plugin_license_key', 'license_valid', 'Licencia válida.', 'updated');
-        } else {
-            add_settings_error('osm_map_plugin_license_key', 'license_invalid', $validation_result['message'], 'error');
-        }
-    }
-    $license_key = get_option('chillypills_license_key', '');
     ?>
     <div class="wrap">
         <h1>Ajustes del mapa OSM</h1>
@@ -78,20 +54,22 @@ function osm_map_plugin_settings_page() {
             <?php settings_errors(); ?>
             <table class="form-table">
                 <tr valign="top">
-                    <th scope="row">Clave de licencia</th>
-                    <td><input type="text" name="chillypills_license_key" value="<?php echo esc_attr($license_key); ?>" /></td>
+                    <th scope="row">Direcciones</th>
+                    <td>
+                        <textarea id="osm_map_plugin_addresses" name="osm_map_plugin_addresses" rows="5" cols="50"><?php echo esc_textarea(get_option('osm_map_plugin_addresses', '')); ?></textarea>
+                        <p>Introduce cada dirección en una nueva línea.</p>
+                    </td>
                 </tr>
             </table>
             <?php submit_button(); ?>
         </form>
     </div>
     <?php
-    osm_map_plugin_validate_license();
 }
 
 // Registrar ajustes del plugin
 function osm_map_plugin_settings() {
-    register_setting('osm_map_plugin_settings', 'osm_map_plugin_addresses', 'sanitize_text_field');
+    register_setting('osm_map_plugin_settings', 'osm_map_plugin_addresses', 'sanitize_textarea_field');
 
     add_settings_section(
         'osm_map_plugin_settings_section',
@@ -112,7 +90,7 @@ add_action('admin_init', 'osm_map_plugin_settings');
 
 function osm_map_plugin_addresses_field_callback() {
     $addresses = get_option('osm_map_plugin_addresses', '');
-    echo '<textarea id="osm_map_plugin_addresses" name="osm_map_plugin_addresses" rows="5" cols="50">' . esc_attr($addresses) . '</textarea>';
+    echo '<textarea id="osm_map_plugin_addresses" name="osm_map_plugin_addresses" rows="5" cols="50">' . esc_textarea($addresses) . '</textarea>';
     echo '<p>Introduce cada dirección en una nueva línea.</p>';
 }
 
