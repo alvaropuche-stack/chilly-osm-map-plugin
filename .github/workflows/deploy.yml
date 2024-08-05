@@ -1,66 +1,35 @@
-name: Build and Deploy Plugins
+name: Deploy Plugins
 
 on:
   push:
     branches:
-      - main  # O la rama principal de tu repositorio
+      - main
+  workflow_dispatch:
 
 jobs:
-  build:
+  deploy:
     runs-on: ubuntu-latest
-
     steps:
-    - name: Check out the repository
-      uses: actions/checkout@v2
+      - name: Checkout repository
+        uses: actions/checkout@v2
 
-    - name: Set up PHP
-      uses: shivammathur/setup-php@v2
-      with:
-        php-version: 7.4
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.0'
 
-    - name: List directory contents
-      run: ls -la
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y unzip
 
-    - name: Zip all plugins
-      run: |
-        for dir in */ ; do
-          if [[ -d "$dir" && ! "$dir" == ".github/" ]]; then
-            zip -r "${dir%/}.zip" "$dir"
-          fi
-        done
+      - name: Fetch and deploy plugins
+        run: |
+          php deploy.php
+        env:
+          PLUGINS_JSON_URL: 'https://plugins-control.chillypills.com/plugins.json'
+          VERSIONS_JSON_URL: 'https://plugins-control.chillypills.com/versions.json'
 
-    - name: Install lftp
-      run: sudo apt-get install -y lftp
-
-    - name: Upload ZIPs to /downloads
-      env:
-        FTP_SERVER: ${{ secrets.FTP_SERVER }}
-        FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
-        FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
-        FTP_REMOTE_PATH: ${{ secrets.FTP_REMOTE_PATH }}
-      run: |
-        for zip in *.zip; do
-          # Upload the ZIP file to /downloads directory on the target server
-          lftp -c "set sftp:auto-confirm yes; open -u $FTP_USERNAME,$FTP_PASSWORD sftp://$FTP_SERVER; put -O $FTP_REMOTE_PATH/downloads $zip"
-          
-          # Prepare for version update
-          plugin_name=$(basename "$zip" .zip)
-          version_file="${plugin_name}/VERSION"
-          if [ -f "$version_file" ]; then
-            current_version=$(cat "$version_file")
-          else
-            current_version="0.0.0"
-          fi
-
-          IFS='.' read -r major minor patch <<< "$current_version"
-          patch=$((patch + 1))
-          new_version="$major.$minor.$patch"
-          echo "$new_version" > "$version_file"
-
-          # Debugging output
-          echo "Updating $plugin_name to version $new_version"
-
-          # Send update request to plugins-control server
-          response=$(curl -X POST -F "plugin_name=$plugin_name" -F "new_version=$new_version" -F "zip_file=@$zip" https://plugins-control.chillypills.com/deploy.php)
-          echo "Response from server: $response"
-        done
+      - name: Clean up
+        run: |
+          echo "Cleaning up..."

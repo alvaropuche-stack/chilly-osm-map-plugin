@@ -78,20 +78,26 @@ class Chillypills_Wrapper_Plugin {
 
     public function plugins_management_page() {
         $plugins_json_url = 'https://plugins-control.chillypills.com/plugins.json'; // URL del archivo plugins.json
-        $response = wp_remote_get($plugins_json_url);
+        $versions_json_url = 'https://plugins-control.chillypills.com/versions.json'; // URL del archivo versions.json
 
-        if (is_wp_error($response)) {
-            echo '<div class="error"><p>Error al obtener la lista de plugins.</p></div>';
+        $plugins_response = wp_remote_get($plugins_json_url);
+        $versions_response = wp_remote_get($versions_json_url);
+
+        if (is_wp_error($plugins_response) || is_wp_error($versions_response)) {
+            echo '<div class="error"><p>Error al obtener la información de plugins o versiones.</p></div>';
             return;
         }
 
-        $plugins_data = json_decode(wp_remote_retrieve_body($response), true);
-        if (!isset($plugins_data['plugins'])) {
-            echo '<div class="error"><p>No se encontró la información de plugins.</p></div>';
+        $plugins_data = json_decode(wp_remote_retrieve_body($plugins_response), true);
+        $versions_data = json_decode(wp_remote_retrieve_body($versions_response), true);
+
+        if (!isset($plugins_data['plugins']) || !isset($versions_data['versions'])) {
+            echo '<div class="error"><p>No se encontró la información de plugins o versiones.</p></div>';
             return;
         }
 
         $chillypills_plugins = $plugins_data['plugins'];
+        $plugin_versions = $versions_data['versions'];
         $installed_plugins = get_plugins();
 
         ?>
@@ -110,10 +116,11 @@ class Chillypills_Wrapper_Plugin {
                         <?php
                         $plugin_file = $plugin_slug . '/' . $plugin_slug . '.php';
                         $plugin_info = isset($installed_plugins[$plugin_file]) ? $installed_plugins[$plugin_file] : null;
+                        $plugin_version = isset($plugin_versions[$plugin_slug]) ? $plugin_versions[$plugin_slug] : 'Desconocida';
                         ?>
                         <tr>
                             <td class="plugin-title">
-                                <strong><?php echo esc_html($plugin_info['Name'] ?? $plugin_slug); ?></strong>
+                                <strong><?php echo esc_html($plugin_info['Name'] ?? $plugin_slug); ?></strong> (v<?php echo esc_html($plugin_version); ?>)
                             </td>
                             <td class="column-description"><?php echo esc_html($plugin_info['Description'] ?? 'No disponible'); ?></td>
                             <td class="column-actions">
@@ -195,18 +202,17 @@ class Chillypills_Wrapper_Plugin {
 
         // Activar el plugin si se ha descargado correctamente
         $plugin_file = $plugin_slug . '/' . $plugin_slug . '.php';
-        activate_plugin($plugin_file);
+        if (file_exists($plugin_dir . '/' . $plugin_file)) {
+            activate_plugin($plugin_file);
+            echo '<p>El plugin se ha descargado e instalado correctamente. Ahora está activado.</p>';
+        } else {
+            echo '<p>El archivo del plugin no se encontró después de la instalación.</p>';
+        }
 
-        echo '<p>El plugin se ha instalado y activado correctamente.</p>';
         echo '</div>';
-
-        wp_redirect(admin_url('admin.php?page=chillypills-plugins-management'));
         exit;
-    }
-
-    public function enqueue_styles() {
-        wp_enqueue_style('chillypills-wrapper-plugin', plugins_url('css/main.css', __FILE__));
     }
 }
 
+// Inicializar el plugin
 new Chillypills_Wrapper_Plugin();
