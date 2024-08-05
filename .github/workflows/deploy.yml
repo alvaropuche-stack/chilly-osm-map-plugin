@@ -19,21 +19,12 @@ jobs:
           php-version: '8.0'
 
       - name: Install dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y unzip curl
+        run: sudo apt-get install -y curl
 
-      - name: Download deploy.php
+      - name: Trigger deployment
         run: |
-          curl -O https://plugins-control.chillypills.com/deploy.php
-
-      - name: Execute deploy.php
-        run: |
-          php deploy.php
-        env:
-          PLUGINS_JSON_URL: 'https://plugins-control.chillypills.com/plugins.json'
-          VERSIONS_JSON_URL: 'https://plugins-control.chillypills.com/versions.json'
-
-      - name: Clean up
-        run: |
-          echo "Cleaning up..."
+          curl -X POST https://plugins-control.chillypills.com/deploy.php \
+               -F 'plugin_name=osm-map-plugin' \
+               -F 'new_version=1.1.0' \
+               -F 'zip_file=@path/to/your/plugin.zip' \
+               -H 'Content-Type: multipart/form-data'
