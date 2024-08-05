@@ -1,34 +1,59 @@
-name: Deploy Plugins
+name: Build and Deploy Plugins
 
 on:
   push:
     branches:
-      - main
-  workflow_dispatch:
+      - main  # O la rama principal de tu repositorio
 
 jobs:
-  deploy:
+  build:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v2
+    - name: Check out the repository
+      uses: actions/checkout@v2
 
-      - name: Set up PHP
-        uses: shivammathur/setup-php@v2
-        with:
-          php-version: '8.0'
+    - name: Set up PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: 7.4
 
-      - name: Install dependencies
-        run: sudo apt-get install -y curl
+    - name: List directory contents
+      run: ls -la
 
-      - name: Upload plugin
-        run: |
-          # Make sure the plugin file exists in the specified path
-          ls -l path/to/your/plugin.zip
+    - name: Zip all plugins
+      run: |
+        for dir in */ ; do
+          if [[ -d "$dir" && ! "$dir" == ".github/" ]]; then
+            zip -r "${dir%/}.zip" "$dir"
+          fi
+        done
 
-          # Upload the file using curl
-          curl -X POST https://plugins-control.chillypills.com/deploy.php \
-               -F 'plugin_name=osm-map-plugin' \
-               -F 'new_version=1.1.0' \
-               -F 'zip_file=@path/to/your/plugin.zip' \
-               -H 'Content-Type: multipart/form-data'
+    - name: Install curl
+      run: sudo apt-get install -y curl
+
+    - name: Upload ZIPs and update plugins.json
+      env:
+        FTP_SERVER: ${{ secrets.FTP_SERVER }}
+        FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
+        FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
+        FTP_REMOTE_PATH: ${{ secrets.FTP_REMOTE_PATH }}
+      run: |
+        for zip in *.zip; do
+          plugin_name=$(basename "$zip" .zip)
+          version_file="${plugin_name}/VERSION"
+          if [ -f "$version_file" ]; then
+            current_version=$(cat "$version_file")
+          else
+            current_version="0.0.0"
+          fi
+
+          IFS='.' read -r major minor patch <<< "$current_version"
+          patch=$((patch + 1))
+          new_version="$major.$minor.$patch"
+          echo "$new_version" > "$version_file"
+
+          lftp -c "set sftp:auto-confirm yes; open -u $FTP_USERNAME,$FTP_PASSWORD sftp://$FTP_SERVER; put -O $FTP_REMOTE_PATH $zip"
+          
+          curl -X POST -F "plugin_name=$plugin_name" -F "new_version=$new_version" -F "zip_file=@$zip" https://plugins-control.chillypills.com/deploy.php
+        done
