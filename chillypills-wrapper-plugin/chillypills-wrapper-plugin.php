@@ -206,7 +206,7 @@ class Chillypills_Wrapper_Plugin {
             activate_plugin($plugin_file);
             echo '<p>El plugin se ha descargado e instalado correctamente. Ahora está activado.</p>';
         } else {
-            echo '<p>El archivo del plugin no se encontró después de la instalación.</p>';
+            echo '<p>El archivo del plugin no se encontró después de la instalación...</p>';
         }
 
         echo '</div>';
