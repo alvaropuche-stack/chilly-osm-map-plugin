@@ -1,0 +1,48 @@
+# Sistema operativo
+.DS_Store
+Thumbs.db
+
+# Archivos de configuración
+.env
+
+# Archivos de WordPress
+/wp-config.php
+/.htaccess
+
+# Archivos temporales y de logs
+*.log
+tmp/
+temp/
+*.tmp
+*.temp
+*.swp
+*.swo
+
+# Archivos de paquetes y compilación
+node_modules/
+vendor/
+composer.lock
+package-lock.json
+
+# Archivos de GitHub Actions
+!.github/
+
+# Archivos del plugin
+osm-map-plugin.zip
+
+# Archivos de despliegue local
+deploy.sh
+
+# Archivos de IDE
+.idea/
+.vscode/
+
+# Archivos del sistema
+*.bak
+*.backup
+*.old
+*.swp
+*.swo
+*~
+*.orig
+*.save
