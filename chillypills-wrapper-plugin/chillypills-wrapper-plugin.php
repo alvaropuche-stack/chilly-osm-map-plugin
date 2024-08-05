@@ -2,7 +2,7 @@
 /*
 Plugin Name: Chillypills Wrapper Plugin
 Description: Plugin principal para gestionar las licencias de otros plugins Chillypills y gestionar la instalación y activación de plugins.
-Version: 1.0.0
+Version: 1.1.0
 Author: Álvaro Puche Ortiz x Chillypills Comunicación S.L.
 Author URI: https://chillypills.com
 */
@@ -14,11 +14,12 @@ if (!defined('ABSPATH')) {
 require_once plugin_dir_path(__FILE__) . 'license-control.php';
 
 class Chillypills_Wrapper_Plugin {
-    
+
     public function __construct() {
         add_action('admin_menu', array($this, 'create_menu'));
         add_action('admin_init', array($this, 'register_settings'));
         add_action('admin_enqueue_scripts', array($this, 'enqueue_styles'));
+        add_action('admin_post_chillypills_download_plugin', array($this, 'handle_download_plugin'));
     }
 
     public function create_menu() {
@@ -115,12 +116,16 @@ class Chillypills_Wrapper_Plugin {
                             </td>
                             <td class="column-description"><?php echo esc_html($plugin_info['Description'] ?? 'No disponible'); ?></td>
                             <td class="column-actions">
-                                <?php if (is_plugin_active($plugin_file)): ?>
-                                    <a href="<?php echo esc_url(wp_nonce_url('plugins.php?action=deactivate&amp;plugin=' . $plugin_file, 'deactivate-plugin_' . $plugin_file)); ?>" class="button">Desactivar</a>
+                                <?php if ($plugin_info): ?>
+                                    <?php if (is_plugin_active($plugin_file)): ?>
+                                        <a href="<?php echo esc_url(wp_nonce_url('plugins.php?action=deactivate&amp;plugin=' . $plugin_file, 'deactivate-plugin_' . $plugin_file)); ?>" class="button">Desactivar</a>
+                                    <?php else: ?>
+                                        <a href="<?php echo esc_url(wp_nonce_url('plugins.php?action=activate&amp;plugin=' . $plugin_file, 'activate-plugin_' . $plugin_file)); ?>" class="button button-primary">Activar</a>
+                                    <?php endif; ?>
+                                    <a href="<?php echo esc_url(wp_nonce_url('plugins.php?action=delete-selected&amp;checked[]=' . $plugin_file, 'bulk-plugins')); ?>" class="button button-secondary">Borrar</a>
                                 <?php else: ?>
-                                    <a href="<?php echo esc_url(wp_nonce_url('plugins.php?action=activate&amp;plugin=' . $plugin_file, 'activate-plugin_' . $plugin_file)); ?>" class="button button-primary">Activar</a>
+                                    <a href="<?php echo esc_url(wp_nonce_url('admin-post.php?action=chillypills_download_plugin&plugin_slug=' . $plugin_slug, 'chillypills_download_plugin_' . $plugin_slug)); ?>" class="button button-primary">Descargar e Instalar</a>
                                 <?php endif; ?>
-                                <a href="<?php echo esc_url(wp_nonce_url('plugins.php?action=delete-selected&amp;checked[]=' . $plugin_file, 'bulk-plugins')); ?>" class="button button-secondary">Borrar</a>
                             </td>
                         </tr>
                     <?php endforeach; ?>
@@ -128,6 +133,53 @@ class Chillypills_Wrapper_Plugin {
             </table>
         </div>
         <?php
+    }
+
+    public function handle_download_plugin() {
+        if (!current_user_can('manage_options')) {
+            wp_die('No tienes permisos suficientes para realizar esta acción.');
+        }
+
+        if (!isset($_GET['plugin_slug'])) {
+            wp_die('No se especificó el plugin a descargar.');
+        }
+
+        $plugin_slug = sanitize_text_field($_GET['plugin_slug']);
+        $plugins_json_url = 'https://plugins-control.chillypills.com/plugins.json';
+        $response = wp_remote_get($plugins_json_url);
+
+        if (is_wp_error($response)) {
+            wp_die('Error al obtener la lista de plugins.');
+        }
+
+        $plugins_data = json_decode(wp_remote_retrieve_body($response), true);
+        if (!isset($plugins_data['plugins'][$plugin_slug])) {
+            wp_die('El plugin especificado no se encuentra en la lista.');
+        }
+
+        $plugin_data = $plugins_data['plugins'][$plugin_slug];
+        $download_url = $plugin_data['download_url'];
+
+        $tmp_file = download_url($download_url);
+        if (is_wp_error($tmp_file)) {
+            wp_die('Error al descargar el plugin.');
+        }
+
+        $plugin_dir = WP_PLUGIN_DIR . '/' . $plugin_slug;
+        $unzip_result = unzip_file($tmp_file, $plugin_dir);
+
+        if (is_wp_error($unzip_result)) {
+            wp_die('Error al instalar el plugin.');
+        }
+
+        unlink($tmp_file);
+
+        // Activar el plugin si se ha descargado correctamente
+        $plugin_file = $plugin_slug . '/' . $plugin_slug . '.php';
+        activate_plugin($plugin_file);
+
+        wp_redirect(admin_url('admin.php?page=chillypills-plugins-management'));
+        exit;
     }
 
     public function enqueue_styles() {
