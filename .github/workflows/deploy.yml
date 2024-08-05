@@ -24,7 +24,7 @@ jobs:
     - name: Zip all plugins
       run: |
         for dir in */ ; do
-          if [[ -d "$dir" ]]; then
+          if [[ -d "$dir" && ! "$dir" == ".github/" ]]; then
             zip -r "${dir%/}.zip" "$dir"
           fi
         done
@@ -40,6 +40,7 @@ jobs:
         FTP_REMOTE_PATH: ${{ secrets.FTP_REMOTE_PATH }}
       run: |
         for zip in *.zip; do
+          lftp -c "set sftp:auto-confirm yes; open -u $FTP_USERNAME,$FTP_PASSWORD sftp://$FTP_SERVER; put -O $FTP_REMOTE_PATH $zip"
           plugin_name=$(basename "$zip" .zip)
           version_file="${plugin_name}/VERSION"
           if [ -f "$version_file" ]; then
@@ -53,6 +54,5 @@ jobs:
           new_version="$major.$minor.$patch"
           echo "$new_version" > "$version_file"
 
-          lftp -c "set sftp:auto-confirm yes; open -u $FTP_USERNAME,$FTP_PASSWORD sftp://$FTP_SERVER; put -O $FTP_REMOTE_PATH $zip"
           curl -X POST -F "plugin_name=$plugin_name" -F "new_version=$new_version" -F "zip_file=@$zip" https://plugins-control.chillypills.com/deploy.php
         done
