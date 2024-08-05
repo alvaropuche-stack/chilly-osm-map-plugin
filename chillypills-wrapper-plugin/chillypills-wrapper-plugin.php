@@ -224,8 +224,7 @@ class Chillypills_Wrapper_Plugin {
             wp_die('El archivo del plugin no se encontró después de la instalación.');
         }
 
-        // Activar el plugin
-        activate_plugin($plugin_file);
+        // Redirigir de nuevo a la página de gestión de plugins
         wp_redirect(admin_url('admin.php?page=chillypills-plugins-management&installed=' . $plugin_slug));
         exit;
     }

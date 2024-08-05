@@ -18,5 +18,13 @@ class Chillypills_License_Control {
         $response_data = json_decode($response_body, true);
         return $response_data['success'];
     }
+
+    public static function check_update($plugin_name, $current_version) {
+        $response = wp_remote_get("https://plugins-control.chillypills.com/check_update.php?plugin_name={$plugin_name}&current_version={$current_version}");
+        if (is_wp_error($response)) {
+            return ['success' => false];
+        }
+        return json_decode(wp_remote_retrieve_body($response), true);
+    }
 }
 ?>

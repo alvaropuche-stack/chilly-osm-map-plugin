@@ -11,6 +11,8 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
+require_once plugin_dir_path(dirname(__FILE__)) . '/chillypills-wrapper-plugin/license-control.php';
+
 // Función para comprobar actualizaciones
 function osm_map_plugin_check_update($transient) {
     if (empty($transient->checked)) {
@@ -19,7 +21,7 @@ function osm_map_plugin_check_update($transient) {
 
     $plugin_name = 'osm-map-plugin';
     $current_version = '1.0.0';
-    $response_data = check_update($plugin_name, $current_version);
+    $response_data = Chillypills_License_Control::check_update($plugin_name, $current_version);
 
     if ($response_data['success'] && version_compare($response_data['version'], $current_version, '>')) {
         $transient->response[plugin_basename(__FILE__)] = (object) [
@@ -50,7 +52,7 @@ function osm_map_plugin_settings_page() {
     ?>
     <div class="wrap">
         <h1>Ajustes del mapa OSM</h1>
-        <form method="post">
+        <form method="post" action="options.php">
             <?php settings_errors(); ?>
             <table class="form-table">
                 <tr valign="top">
@@ -109,4 +111,3 @@ function osm_map_plugin_enqueue_scripts() {
     wp_enqueue_style('leaflet-geocoder-css', 'https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css');
 }
 add_action('wp_enqueue_scripts', 'osm_map_plugin_enqueue_scripts');
-?>
