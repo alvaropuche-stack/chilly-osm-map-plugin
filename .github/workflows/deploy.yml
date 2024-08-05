@@ -18,8 +18,11 @@ jobs:
       with:
         php-version: 7.4
 
+    - name: List directory contents
+      run: ls -la
+
     - name: Zip the plugin
-      run: zip -r osm-map-plugin.zip osm-map-plugin
+      run: zip -r chilly-osm-map-plugin.zip chilly-osm-map-plugin
 
     - name: Install lftp
       run: sudo apt-get install -y lftp
@@ -31,4 +34,4 @@ jobs:
         FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
         FTP_REMOTE_PATH: ${{ secrets.FTP_REMOTE_PATH }}
       run: |
-        lftp -c "set sftp:auto-confirm yes; open -u $FTP_USERNAME,$FTP_PASSWORD sftp://$FTP_SERVER; put -O $FTP_REMOTE_PATH osm-map-plugin.zip"
+        lftp -c "set sftp:auto-confirm yes; open -u $FTP_USERNAME,$FTP_PASSWORD sftp://$FTP_SERVER; put -O $FTP_REMOTE_PATH chilly-osm-map-plugin.zip"
