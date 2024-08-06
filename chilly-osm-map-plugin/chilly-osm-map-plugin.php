@@ -135,3 +135,4 @@ function chilly_osm_map_plugin_enqueue_scripts() {
     wp_enqueue_style('leaflet-geocoder-css', 'https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css');
 }
 add_action('wp_enqueue_scripts', 'chilly_osm_map_plugin_enqueue_scripts');
+?>
