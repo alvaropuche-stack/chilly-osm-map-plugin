@@ -198,69 +198,87 @@ class Elementor_Chillypills_OSM_Map_Widget extends \Elementor\Widget_Base {
         $map_zoom = $settings['map_zoom'];
         $locations = $settings['locations'];
         $mapbox_token = $settings['mapbox_token'];
+
+        $locations_js = json_encode($locations);
         ?>
         <div id="osm-map" style="width: 100%; height: 500px; position: relative;"></div>
         <div id="osm-map-buttons" style="position: absolute; top: 10px; right: 10px; z-index: 400;"></div>
         <script>
-            document.addEventListener('DOMContentLoaded', function() {
-                var mapCenter = [51.505, -0.09]; // Default center
-                if (locations.length > 0 && locations[0].manual_coordinates === 'yes') {
-                    mapCenter = [locations[0].latitude, locations[0].longitude];
-                } else if (locations.length > 0) {
-                    // Geocode the first address to get the map center
+            (function($) {
+                function initMap() {
+                    var settings = {
+                        locations: <?php echo $locations_js; ?>,
+                        map_style: '<?php echo esc_js($map_style); ?>',
+                        map_zoom: <?php echo esc_js($map_zoom); ?>,
+                        mapbox_token: '<?php echo esc_js($mapbox_token); ?>'
+                    };
+
+                    var mapCenter = [51.505, -0.09]; // Default center
+                    if (settings.locations.length > 0 && settings.locations[0].manual_coordinates === 'yes') {
+                        mapCenter = [settings.locations[0].latitude, settings.locations[0].longitude];
+                    } else if (settings.locations.length > 0) {
+                        // Geocode the first address to get the map center
+                        var geocoder = L.Control.Geocoder.nominatim();
+                        geocoder.geocode(settings.locations[0].address, function(results) {
+                            if (results.length) {
+                                mapCenter = results[0].center;
+                            }
+                        });
+                    }
+
+                    var map = L.map('osm-map').setView(mapCenter, settings.map_zoom);
+
+                    L.tileLayer('https://api.mapbox.com/styles/v1/mapbox/' + settings.map_style + '/tiles/{z}/{x}/{y}?access_token=' + settings.mapbox_token, {
+                        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://www.mapbox.com/about/maps/">Mapbox</a>',
+                        tileSize: 512,
+                        zoomOffset: -1,
+                    }).addTo(map);
+
                     var geocoder = L.Control.Geocoder.nominatim();
-                    geocoder.geocode(locations[0].address, function(results) {
-                        if (results.length) {
-                            mapCenter = results[0].center;
+
+                    settings.locations.forEach(function(location) {
+                        var popup_content = '<strong>' + location.title + '</strong><br>' + location.address;
+                        if (location.manual_coordinates === 'yes') {
+                            var marker = L.marker([location.latitude, location.longitude]).addTo(map)
+                                .bindPopup(popup_content)
+                                .openPopup();
+                        } else {
+                            geocoder.geocode(location.address, function(results) {
+                                if (results.length) {
+                                    var marker = L.marker(results[0].center).addTo(map)
+                                        .bindPopup(popup_content)
+                                        .openPopup();
+                                }
+                            });
+                        }
+
+                        if (location.google_maps_link.url) {
+                            var button = document.createElement('a');
+                            button.href = location.google_maps_link.url;
+                            button.target = '_blank';
+                            button.style.cssText = 'display: block; background: white; color: #006790; padding: 5px 10px; margin-top: 5px; font-family: "Lexend Light"; text-align: center; text-decoration: none; border-radius: 4px; border: 1px solid #006790;';
+                            button.textContent = 'Ver en Google Maps';
+                            button.onmouseover = function() {
+                                button.style.backgroundColor = '#006790';
+                                button.style.color = 'white';
+                            };
+                            button.onmouseout = function() {
+                                button.style.backgroundColor = 'white';
+                                button.style.color = '#006790';
+                            };
+                            document.getElementById('osm-map-buttons').appendChild(button);
                         }
                     });
                 }
 
-                var map = L.map('osm-map').setView(mapCenter, <?php echo esc_js($map_zoom); ?>);
+                $(document).ready(function() {
+                    initMap();
+                });
 
-                L.tileLayer('https://api.mapbox.com/styles/v1/mapbox/<?php echo esc_js($map_style); ?>/tiles/{z}/{x}/{y}?access_token=<?php echo esc_js($mapbox_token); ?>', {
-                    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://www.mapbox.com/about/maps/">Mapbox</a>',
-                    tileSize: 512,
-                    zoomOffset: -1,
-                }).addTo(map);
-
-                var geocoder = L.Control.Geocoder.nominatim();
-
-                <?php foreach ($locations as $location): ?>
-                    <?php
-                    $popup_content = '<strong>' . esc_js($location['title']) . '</strong><br>' . esc_js($location['address']);
-                    ?>
-                    <?php if ($location['manual_coordinates'] === 'yes'): ?>
-                        var marker = L.marker([<?php echo esc_js($location['latitude']); ?>, <?php echo esc_js($location['longitude']); ?>]).addTo(map)
-                            .bindPopup('<?php echo $popup_content; ?>')
-                            .openPopup();
-                    <?php else: ?>
-                        geocoder.geocode('<?php echo esc_js($location['address']); ?>', function(results) {
-                            if (results.length) {
-                                var marker = L.marker(results[0].center).addTo(map)
-                                    .bindPopup('<?php echo $popup_content; ?>')
-                                    .openPopup();
-                            }
-                        });
-                    <?php endif; ?>
-                    <?php if (!empty($location['google_maps_link']['url'])): ?>
-                        var button = document.createElement('a');
-                        button.href = '<?php echo esc_url($location['google_maps_link']['url']); ?>';
-                        button.target = '_blank';
-                        button.style.cssText = 'display: block; background: white; color: #006790; padding: 5px 10px; margin-top: 5px; font-family: "Lexend Light"; text-align: center; text-decoration: none; border-radius: 4px; border: 1px solid #006790;';
-                        button.textContent = 'Ver en Google Maps';
-                        button.onmouseover = function() {
-                            button.style.backgroundColor = '#006790';
-                            button.style.color = 'white';
-                        };
-                        button.onmouseout = function() {
-                            button.style.backgroundColor = 'white';
-                            button.style.color = '#006790';
-                        };
-                        document.getElementById('osm-map-buttons').appendChild(button);
-                    <?php endif; ?>
-                <?php endforeach; ?>
-            });
+                $(window).on('elementor/frontend/init', function() {
+                    elementorFrontend.hooks.addAction('frontend/element_ready/global', initMap);
+                });
+            })(jQuery);
         </script>
         <?php
     }
@@ -268,17 +286,19 @@ class Elementor_Chillypills_OSM_Map_Widget extends \Elementor\Widget_Base {
     protected function _content_template() {
         ?>
         <#
-        var map_style = settings.map_style;
-        var map_zoom = settings.map_zoom;
-        var locations = settings.locations;
-        var mapbox_token = settings.mapbox_token;
+        var settings = {
+            map_style: settings.map_style,
+            map_zoom: settings.map_zoom,
+            locations: settings.locations,
+            mapbox_token: settings.mapbox_token
+        };
         var mapCenter = [51.505, -0.09]; // Default center
-        if (locations.length > 0 && locations[0].manual_coordinates === 'yes') {
-            mapCenter = [locations[0].latitude, locations[0].longitude];
-        } else if (locations.length > 0) {
+        if (settings.locations.length > 0 && settings.locations[0].manual_coordinates === 'yes') {
+            mapCenter = [settings.locations[0].latitude, settings.locations[0].longitude];
+        } else if (settings.locations.length > 0) {
             // Geocode the first address to get the map center
             var geocoder = L.Control.Geocoder.nominatim();
-            geocoder.geocode(locations[0].address, function(results) {
+            geocoder.geocode(settings.locations[0].address, function(results) {
                 if (results.length) {
                     mapCenter = results[0].center;
                 }
@@ -288,51 +308,61 @@ class Elementor_Chillypills_OSM_Map_Widget extends \Elementor\Widget_Base {
         <div id="osm-map" style="width: 100%; height: 500px; position: relative;"></div>
         <div id="osm-map-buttons" style="position: absolute; top: 10px; right: 10px; z-index: 400;"></div>
         <script>
-            document.addEventListener('DOMContentLoaded', function() {
-                var map = L.map('osm-map').setView(mapCenter, {{{ map_zoom }}});
+            (function($) {
+                function initMap() {
+                    var map = L.map('osm-map').setView(mapCenter, settings.map_zoom);
 
-                L.tileLayer('https://api.mapbox.com/styles/v1/mapbox/{{{ map_style }}}/tiles/{z}/{x}/{y}?access_token={{{ mapbox_token }}}', {
-                    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://www.mapbox.com/about/maps/">Mapbox</a>',
-                    tileSize: 512,
-                    zoomOffset: -1,
-                }).addTo(map);
+                    L.tileLayer('https://api.mapbox.com/styles/v1/mapbox/' + settings.map_style + '/tiles/{z}/{x}/{y}?access_token=' + settings.mapbox_token, {
+                        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://www.mapbox.com/about/maps/">Mapbox</a>',
+                        tileSize: 512,
+                        zoomOffset: -1,
+                    }).addTo(map);
 
-                var geocoder = L.Control.Geocoder.nominatim();
+                    var geocoder = L.Control.Geocoder.nominatim();
 
-                _.each(locations, function(location) {
-                    var popup_content = '<strong>' + location.title + '</strong><br>' + location.address;
-                    if (location.manual_coordinates === 'yes') {
-                        var marker = L.marker([location.latitude, location.longitude]).addTo(map)
-                            .bindPopup(popup_content)
-                            .openPopup();
-                    } else {
-                        geocoder.geocode(location.address, function(results) {
-                            if (results.length) {
-                                var marker = L.marker(results[0].center).addTo(map)
-                                    .bindPopup(popup_content)
-                                    .openPopup();
-                            }
-                        });
-                    }
+                    settings.locations.forEach(function(location) {
+                        var popup_content = '<strong>' + location.title + '</strong><br>' + location.address;
+                        if (location.manual_coordinates === 'yes') {
+                            var marker = L.marker([location.latitude, location.longitude]).addTo(map)
+                                .bindPopup(popup_content)
+                                .openPopup();
+                        } else {
+                            geocoder.geocode(location.address, function(results) {
+                                if (results.length) {
+                                    var marker = L.marker(results[0].center).addTo(map)
+                                        .bindPopup(popup_content)
+                                        .openPopup();
+                                }
+                            });
+                        }
 
-                    if (location.google_maps_link.url) {
-                        var button = document.createElement('a');
-                        button.href = location.google_maps_link.url;
-                        button.target = '_blank';
-                        button.style.cssText = 'display: block; background: white; color: #006790; padding: 5px 10px; margin-top: 5px; font-family: "Lexend Light"; text-align: center; text-decoration: none; border-radius: 4px; border: 1px solid #006790;';
-                        button.textContent = 'Ver en Google Maps';
-                        button.onmouseover = function() {
-                            button.style.backgroundColor = '#006790';
-                            button.style.color = 'white';
-                        };
-                        button.onmouseout = function() {
-                            button.style.backgroundColor = 'white';
-                            button.style.color = '#006790';
-                        };
-                        document.getElementById('osm-map-buttons').appendChild(button);
-                    }
+                        if (location.google_maps_link.url) {
+                            var button = document.createElement('a');
+                            button.href = location.google_maps_link.url;
+                            button.target = '_blank';
+                            button.style.cssText = 'display: block; background: white; color: #006790; padding: 5px 10px; margin-top: 5px; font-family: "Lexend Light"; text-align: center; text-decoration: none; border-radius: 4px; border: 1px solid #006790;';
+                            button.textContent = 'Ver en Google Maps';
+                            button.onmouseover = function() {
+                                button.style.backgroundColor = '#006790';
+                                button.style.color = 'white';
+                            };
+                            button.onmouseout = function() {
+                                button.style.backgroundColor = 'white';
+                                button.style.color = '#006790';
+                            };
+                            document.getElementById('osm-map-buttons').appendChild(button);
+                        }
+                    });
+                }
+
+                $(document).ready(function() {
+                    initMap();
                 });
-            });
+
+                $(window).on('elementor/frontend/init', function() {
+                    elementorFrontend.hooks.addAction('frontend/element_ready/global', initMap);
+                });
+            })(jQuery);
         </script>
         <?php
     }
