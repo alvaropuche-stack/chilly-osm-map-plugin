@@ -25,6 +25,15 @@ jobs:
       run: |
         for dir in */ ; do
           if [[ -d "$dir" && ! "$dir" == ".github/" ]]; then
+            # Extract version from the main plugin file
+            main_plugin_file="$dir/$(basename "$dir").php"
+            if [[ -f "$main_plugin_file" ]]; then
+              version=$(grep -i "Version:" "$main_plugin_file" | awk -F ' ' '{print $2}')
+              if [[ ! -z "$version" ]]; then
+                echo "Version detected for $dir: $version"
+                echo "$version" > "$dir/VERSION"
+              fi
+            fi
             zip -r "${dir%/}.zip" "$dir"
           fi
         done
@@ -44,5 +53,12 @@ jobs:
           
           lftp -c "set sftp:auto-confirm yes; open -u $FTP_USERNAME,$FTP_PASSWORD sftp://$FTP_SERVER; put -O $FTP_REMOTE_PATH $zip"
           
-          curl -X POST -F "plugin_name=$plugin_name" -F "zip_file=@$zip" https://plugins-control.chillypills.com/deploy.php
+          version_file="${plugin_name}/VERSION"
+          if [[ -f "$version_file" ]]; then
+            new_version=$(cat "$version_file")
+          else
+            new_version="0.0.0"
+          fi
+
+          curl -X POST -F "plugin_name=$plugin_name" -F "new_version=$new_version" -F "zip_file=@$zip" https://plugins-control.chillypills.com/deploy.php
         done
