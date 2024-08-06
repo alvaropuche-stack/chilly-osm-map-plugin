@@ -1,6 +1,6 @@
 <?php
 /*
-Plugin Name: OSM Map Plugin
+Plugin Name: Chilly OSM Map Plugin
 Description: Plugin para mostrar un mapa de OpenStreetMap con direcciones configurables.
 Version: 0.0.7
 Author: Álvaro Puche Ortiz x Chillypills Comunicación S.L.
@@ -18,9 +18,9 @@ if (!function_exists('is_plugin_active')) {
 
 // Comprobar si el plugin Chillypills Wrapper está activo
 if (!is_plugin_active('chillypills-wrapper-plugin/chillypills-wrapper-plugin.php')) {
-    add_action('admin_notices', 'osm_map_plugin_dependency_error');
-    function osm_map_plugin_dependency_error() {
-        echo '<div class="error"><p>OSM Map Plugin requiere el plugin Chillypills Wrapper activo.</p></div>';
+    add_action('admin_notices', 'chilly_osm_map_plugin_dependency_error');
+    function chilly_osm_map_plugin_dependency_error() {
+        echo '<div class="error"><p>Chilly OSM Map Plugin requiere el plugin Chillypills Wrapper activo.</p></div>';
     }
     return;
 }
@@ -30,21 +30,21 @@ require_once plugin_dir_path(dirname(__FILE__)) . 'chillypills-wrapper-plugin/li
 
 // Validar la licencia global
 if (!Chillypills_License_Control::validate_global_license()) {
-    add_action('admin_notices', 'osm_map_plugin_license_error');
-    function osm_map_plugin_license_error() {
-        echo '<div class="error"><p>OSM Map Plugin requiere una licencia global válida. Por favor, ingrese una licencia válida en la configuración del plugin Chillypills Wrapper.</p></div>';
+    add_action('admin_notices', 'chilly_osm_map_plugin_license_error');
+    function chilly_osm_map_plugin_license_error() {
+        echo '<div class="error"><p>Chilly OSM Map Plugin requiere una licencia global válida. Por favor, ingrese una licencia válida en la configuración del plugin Chillypills Wrapper.</p></div>';
     }
     return;
 }
 
 // Función para comprobar actualizaciones
-function osm_map_plugin_check_update($transient) {
+function chilly_osm_map_plugin_check_update($transient) {
     if (empty($transient->checked)) {
         return $transient;
     }
 
-    $plugin_name = 'osm-map-plugin';
-    $current_version = '0.0.5';
+    $plugin_name = 'chilly-osm-map-plugin';
+    $current_version = '0.0.7';
     $response_data = Chillypills_License_Control::check_update($plugin_name, $current_version);
 
     if ($response_data['success'] && version_compare($response_data['version'], $current_version, '>')) {
@@ -57,22 +57,22 @@ function osm_map_plugin_check_update($transient) {
 
     return $transient;
 }
-add_filter('pre_set_site_transient_update_plugins', 'osm_map_plugin_check_update');
+add_filter('pre_set_site_transient_update_plugins', 'chilly_osm_map_plugin_check_update');
 
 // Añadir un menú de configuración en el administrador de WordPress
-function osm_map_plugin_menu() {
+function chilly_osm_map_plugin_menu() {
     add_options_page(
         'Ajustes del mapa OSM',
         'Ajustes del mapa OSM',
         'manage_options',
-        'osm-map-plugin',
-        'osm_map_plugin_settings_page'
+        'chilly-osm-map-plugin',
+        'chilly_osm_map_plugin_settings_page'
     );
 }
-add_action('admin_menu', 'osm_map_plugin_menu');
+add_action('admin_menu', 'chilly_osm_map_plugin_menu');
 
 // Página de configuración del plugin
-function osm_map_plugin_settings_page() {
+function chilly_osm_map_plugin_settings_page() {
     ?>
     <div class="wrap">
         <h1>Ajustes del mapa OSM</h1>
@@ -82,7 +82,7 @@ function osm_map_plugin_settings_page() {
                 <tr valign="top">
                     <th scope="row">Direcciones</th>
                     <td>
-                        <textarea id="osm_map_plugin_addresses" name="osm_map_plugin_addresses" rows="5" cols="50"><?php echo esc_textarea(get_option('osm_map_plugin_addresses', '')); ?></textarea>
+                        <textarea id="chilly_osm_map_plugin_addresses" name="chilly_osm_map_plugin_addresses" rows="5" cols="50"><?php echo esc_textarea(get_option('chilly_osm_map_plugin_addresses', '')); ?></textarea>
                         <p>Introduce cada dirección en una nueva línea.</p>
                     </td>
                 </tr>
@@ -94,44 +94,44 @@ function osm_map_plugin_settings_page() {
 }
 
 // Registrar ajustes del plugin
-function osm_map_plugin_settings() {
-    register_setting('osm_map_plugin_settings', 'osm_map_plugin_addresses', 'sanitize_textarea_field');
+function chilly_osm_map_plugin_settings() {
+    register_setting('chilly_osm_map_plugin_settings', 'chilly_osm_map_plugin_addresses', 'sanitize_textarea_field');
 
     add_settings_section(
-        'osm_map_plugin_settings_section',
+        'chilly_osm_map_plugin_settings_section',
         'Ajustes del Mapa',
         null,
-        'osm-map-plugin'
+        'chilly-osm-map-plugin'
     );
 
     add_settings_field(
-        'osm_map_plugin_addresses_field',
+        'chilly_osm_map_plugin_addresses_field',
         'Direcciones',
-        'osm_map_plugin_addresses_field_callback',
-        'osm-map-plugin',
-        'osm_map_plugin_settings_section'
+        'chilly_osm_map_plugin_addresses_field_callback',
+        'chilly-osm-map-plugin',
+        'chilly_osm_map_plugin_settings_section'
     );
 }
-add_action('admin_init', 'osm_map_plugin_settings');
+add_action('admin_init', 'chilly_osm_map_plugin_settings');
 
-function osm_map_plugin_addresses_field_callback() {
-    $addresses = get_option('osm_map_plugin_addresses', '');
-    echo '<textarea id="osm_map_plugin_addresses" name="osm_map_plugin_addresses" rows="5" cols="50">' . esc_textarea($addresses) . '</textarea>';
+function chilly_osm_map_plugin_addresses_field_callback() {
+    $addresses = get_option('chilly_osm_map_plugin_addresses', '');
+    echo '<textarea id="chilly_osm_map_plugin_addresses" name="chilly_osm_map_plugin_addresses" rows="5" cols="50">' . esc_textarea($addresses) . '</textarea>';
     echo '<p>Introduce cada dirección en una nueva línea.</p>';
 }
 
 // Registrar el widget de Elementor
-function register_osm_map_widget($widgets_manager) {
+function register_chilly_osm_map_widget($widgets_manager) {
     require_once(__DIR__ . '/chilly-osm-map-widget.php');
     $widgets_manager->register(new \Elementor_Chillypills_OSM_Map_Widget());
 }
-add_action('elementor/widgets/register', 'register_osm_map_widget');
+add_action('elementor/widgets/register', 'register_chilly_osm_map_widget');
 
 // Cargar archivos de Leaflet
-function osm_map_plugin_enqueue_scripts() {
+function chilly_osm_map_plugin_enqueue_scripts() {
     wp_enqueue_style('leaflet-css', 'https://unpkg.com/leaflet@1.7.1/dist/leaflet.css');
     wp_enqueue_script('leaflet-js', 'https://unpkg.com/leaflet@1.7.1/dist/leaflet.js', array(), null, true);
     wp_enqueue_script('leaflet-geocoder-js', 'https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js', array('leaflet-js'), null, true);
     wp_enqueue_style('leaflet-geocoder-css', 'https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css');
 }
-add_action('wp_enqueue_scripts', 'osm_map_plugin_enqueue_scripts');
+add_action('wp_enqueue_scripts', 'chilly_osm_map_plugin_enqueue_scripts');
