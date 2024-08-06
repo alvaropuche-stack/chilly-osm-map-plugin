@@ -140,16 +140,6 @@ class Elementor_Chillypills_OSM_Map_Widget extends \Elementor\Widget_Base {
         );
 
         $this->add_control(
-            'map_center',
-            [
-                'label' => __('Centro del Mapa', 'elementor'),
-                'type' => \Elementor\Controls_Manager::TEXT,
-                'default' => '51.505, -0.09',
-                'description' => __('Introduce la latitud y longitud separadas por una coma.', 'elementor'),
-            ]
-        );
-
-        $this->add_control(
             'map_zoom',
             [
                 'label' => __('Zoom del Mapa', 'elementor'),
@@ -205,7 +195,6 @@ class Elementor_Chillypills_OSM_Map_Widget extends \Elementor\Widget_Base {
     protected function render() {
         $settings = $this->get_settings_for_display();
         $map_style = $settings['map_style'];
-        $map_center = explode(',', $settings['map_center']);
         $map_zoom = $settings['map_zoom'];
         $locations = $settings['locations'];
         $mapbox_token = $settings['mapbox_token'];
@@ -214,7 +203,20 @@ class Elementor_Chillypills_OSM_Map_Widget extends \Elementor\Widget_Base {
         <div id="osm-map-buttons" style="position: absolute; top: 10px; right: 10px; z-index: 400;"></div>
         <script>
             document.addEventListener('DOMContentLoaded', function() {
-                var map = L.map('osm-map').setView([<?php echo esc_js($map_center[0]); ?>, <?php echo esc_js($map_center[1]); ?>], <?php echo esc_js($map_zoom); ?>);
+                var mapCenter = [51.505, -0.09]; // Default center
+                if (locations.length > 0 && locations[0].manual_coordinates === 'yes') {
+                    mapCenter = [locations[0].latitude, locations[0].longitude];
+                } else if (locations.length > 0) {
+                    // Geocode the first address to get the map center
+                    var geocoder = L.Control.Geocoder.nominatim();
+                    geocoder.geocode(locations[0].address, function(results) {
+                        if (results.length) {
+                            mapCenter = results[0].center;
+                        }
+                    });
+                }
+
+                var map = L.map('osm-map').setView(mapCenter, <?php echo esc_js($map_zoom); ?>);
 
                 L.tileLayer('https://api.mapbox.com/styles/v1/mapbox/<?php echo esc_js($map_style); ?>/tiles/{z}/{x}/{y}?access_token=<?php echo esc_js($mapbox_token); ?>', {
                     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://www.mapbox.com/about/maps/">Mapbox</a>',
@@ -245,8 +247,16 @@ class Elementor_Chillypills_OSM_Map_Widget extends \Elementor\Widget_Base {
                         var button = document.createElement('a');
                         button.href = '<?php echo esc_url($location['google_maps_link']['url']); ?>';
                         button.target = '_blank';
-                        button.style.cssText = 'display: block; background: white; color: #006790; padding: 5px 10px; margin-top: 5px; font-family: "Lexend Light"; text-align: center; text-decoration: none; border-radius: 4px;';
+                        button.style.cssText = 'display: block; background: white; color: #006790; padding: 5px 10px; margin-top: 5px; font-family: "Lexend Light"; text-align: center; text-decoration: none; border-radius: 4px; border: 1px solid #006790;';
                         button.textContent = 'Ver en Google Maps';
+                        button.onmouseover = function() {
+                            button.style.backgroundColor = '#006790';
+                            button.style.color = 'white';
+                        };
+                        button.onmouseout = function() {
+                            button.style.backgroundColor = 'white';
+                            button.style.color = '#006790';
+                        };
                         document.getElementById('osm-map-buttons').appendChild(button);
                     <?php endif; ?>
                 <?php endforeach; ?>
@@ -259,16 +269,27 @@ class Elementor_Chillypills_OSM_Map_Widget extends \Elementor\Widget_Base {
         ?>
         <#
         var map_style = settings.map_style;
-        var map_center = settings.map_center.split(',');
         var map_zoom = settings.map_zoom;
         var locations = settings.locations;
         var mapbox_token = settings.mapbox_token;
+        var mapCenter = [51.505, -0.09]; // Default center
+        if (locations.length > 0 && locations[0].manual_coordinates === 'yes') {
+            mapCenter = [locations[0].latitude, locations[0].longitude];
+        } else if (locations.length > 0) {
+            // Geocode the first address to get the map center
+            var geocoder = L.Control.Geocoder.nominatim();
+            geocoder.geocode(locations[0].address, function(results) {
+                if (results.length) {
+                    mapCenter = results[0].center;
+                }
+            });
+        }
         #>
         <div id="osm-map" style="width: 100%; height: 500px; position: relative;"></div>
         <div id="osm-map-buttons" style="position: absolute; top: 10px; right: 10px; z-index: 400;"></div>
         <script>
             document.addEventListener('DOMContentLoaded', function() {
-                var map = L.map('osm-map').setView([{{{ map_center[0] }}}, {{{ map_center[1] }}}], {{{ map_zoom }}});
+                var map = L.map('osm-map').setView(mapCenter, {{{ map_zoom }}});
 
                 L.tileLayer('https://api.mapbox.com/styles/v1/mapbox/{{{ map_style }}}/tiles/{z}/{x}/{y}?access_token={{{ mapbox_token }}}', {
                     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://www.mapbox.com/about/maps/">Mapbox</a>',
@@ -298,8 +319,16 @@ class Elementor_Chillypills_OSM_Map_Widget extends \Elementor\Widget_Base {
                         var button = document.createElement('a');
                         button.href = location.google_maps_link.url;
                         button.target = '_blank';
-                        button.style.cssText = 'display: block; background: white; color: #006790; padding: 5px 10px; margin-top: 5px; font-family: "Lexend Light"; text-align: center; text-decoration: none; border-radius: 4px;';
+                        button.style.cssText = 'display: block; background: white; color: #006790; padding: 5px 10px; margin-top: 5px; font-family: "Lexend Light"; text-align: center; text-decoration: none; border-radius: 4px; border: 1px solid #006790;';
                         button.textContent = 'Ver en Google Maps';
+                        button.onmouseover = function() {
+                            button.style.backgroundColor = '#006790';
+                            button.style.color = 'white';
+                        };
+                        button.onmouseout = function() {
+                            button.style.backgroundColor = 'white';
+                            button.style.color = '#006790';
+                        };
                         document.getElementById('osm-map-buttons').appendChild(button);
                     }
                 });
