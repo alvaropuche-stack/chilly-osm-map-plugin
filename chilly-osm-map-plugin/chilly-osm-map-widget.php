@@ -218,6 +218,9 @@ class Elementor_Chillypills_OSM_Map_Widget extends \Elementor\Widget_Base {
                         mapContainer._leaflet_id = null;
                     }
 
+                    var buttonsContainer = document.getElementById('osm-map-buttons');
+                    buttonsContainer.innerHTML = ''; // Clear previous buttons
+
                     var mapCenter = [51.505, -0.09]; // Default center
                     if (settings.locations.length > 0 && settings.locations[0].manual_coordinates === 'yes') {
                         mapCenter = [settings.locations[0].latitude, settings.locations[0].longitude];
@@ -271,7 +274,7 @@ class Elementor_Chillypills_OSM_Map_Widget extends \Elementor\Widget_Base {
                                 button.style.backgroundColor = 'white';
                                 button.style.color = '#006790';
                             };
-                            document.getElementById('osm-map-buttons').appendChild(button);
+                            buttonsContainer.appendChild(button);
                         }
                     });
                 }

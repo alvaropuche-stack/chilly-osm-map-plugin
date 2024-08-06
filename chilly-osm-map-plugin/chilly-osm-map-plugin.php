@@ -33,7 +33,13 @@ function chilly_osm_map_plugin_check_update($transient) {
 
     $plugin_name = 'chilly-osm-map-plugin';
     $current_version = '0.0.7';
-    $response_data = Chillypills_License_Control::check_update($plugin_name, $current_version);
+    $response = wp_remote_get("https://plugins-control.chillypills.com/check_update.php?plugin_name={$plugin_name}&current_version={$current_version}");
+
+    if (is_wp_error($response)) {
+        return $transient;
+    }
+
+    $response_data = json_decode(wp_remote_retrieve_body($response), true);
 
     if ($response_data['success'] && version_compare($response_data['version'], $current_version, '>')) {
         $transient->response[plugin_basename(__FILE__)] = (object) [
@@ -70,7 +76,7 @@ function chilly_osm_map_plugin_settings_page() {
                 <tr valign="top">
                     <th scope="row">Direcciones</th>
                     <td>
-                        <textarea id="chilly_osm_map_plugin_addresses" name="chilly_osm_map_plugin_addresses" rows="5" cols="50"><?php echo esc_textarea(get_option('chilly_osm_map_plugin_addresses', '')); ?></textarea>
+                        <textarea id="osm_map_plugin_addresses" name="osm_map_plugin_addresses" rows="5" cols="50"><?php echo esc_textarea(get_option('osm_map_plugin_addresses', '')); ?></textarea>
                         <p>Introduce cada dirección en una nueva línea.</p>
                     </td>
                 </tr>
@@ -83,28 +89,28 @@ function chilly_osm_map_plugin_settings_page() {
 
 // Registrar ajustes del plugin
 function chilly_osm_map_plugin_settings() {
-    register_setting('chilly_osm_map_plugin_settings', 'chilly_osm_map_plugin_addresses', 'sanitize_textarea_field');
+    register_setting('osm_map_plugin_settings', 'osm_map_plugin_addresses', 'sanitize_textarea_field');
 
     add_settings_section(
-        'chilly_osm_map_plugin_settings_section',
+        'osm_map_plugin_settings_section',
         'Ajustes del Mapa',
         null,
         'chilly-osm-map-plugin'
     );
 
     add_settings_field(
-        'chilly_osm_map_plugin_addresses_field',
+        'osm_map_plugin_addresses_field',
         'Direcciones',
         'chilly_osm_map_plugin_addresses_field_callback',
         'chilly-osm-map-plugin',
-        'chilly_osm_map_plugin_settings_section'
+        'osm_map_plugin_settings_section'
     );
 }
 add_action('admin_init', 'chilly_osm_map_plugin_settings');
 
 function chilly_osm_map_plugin_addresses_field_callback() {
-    $addresses = get_option('chilly_osm_map_plugin_addresses', '');
-    echo '<textarea id="chilly_osm_map_plugin_addresses" name="chilly_osm_map_plugin_addresses" rows="5" cols="50">' . esc_textarea($addresses) . '</textarea>';
+    $addresses = get_option('osm_map_plugin_addresses', '');
+    echo '<textarea id="osm_map_plugin_addresses" name="osm_map_plugin_addresses" rows="5" cols="50">' . esc_textarea($addresses) . '</textarea>';
     echo '<p>Introduce cada dirección en una nueva línea.</p>';
 }
 
@@ -123,4 +129,3 @@ function chilly_osm_map_plugin_enqueue_scripts() {
     wp_enqueue_style('leaflet-geocoder-css', 'https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css');
 }
 add_action('wp_enqueue_scripts', 'chilly_osm_map_plugin_enqueue_scripts');
-?>
