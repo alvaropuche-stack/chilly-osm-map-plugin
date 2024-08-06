@@ -25,18 +25,6 @@ if (!is_plugin_active('chillypills-wrapper-plugin/chillypills-wrapper-plugin.php
     return;
 }
 
-// Incluir el archivo de control de licencia
-require_once plugin_dir_path(dirname(__FILE__)) . 'chillypills-wrapper-plugin/license-control.php';
-
-// Validar la licencia global
-if (!Chillypills_License_Control::validate_global_license()) {
-    add_action('admin_notices', 'chilly_osm_map_plugin_license_error');
-    function chilly_osm_map_plugin_license_error() {
-        echo '<div class="error"><p>Chilly OSM Map Plugin requiere una licencia global válida. Por favor, ingrese una licencia válida en la configuración del plugin Chillypills Wrapper.</p></div>';
-    }
-    return;
-}
-
 // Función para comprobar actualizaciones
 function chilly_osm_map_plugin_check_update($transient) {
     if (empty($transient->checked)) {
