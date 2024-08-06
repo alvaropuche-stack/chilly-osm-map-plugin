@@ -143,7 +143,7 @@ Nuestro sistema de plugins está centralizado alrededor del "Chillypills Wrapper
 
 ### Ejemplo de Código
 
-Aquí tienes un ejemplo de cómo debería verse el archivo principal de un nuevo plugin (my-plugin.php):
+Aquí tienes un ejemplo de cómo debería verse el archivo principal de un nuevo plugin (my-plugin.php).:
 
 ```php
 <?php
