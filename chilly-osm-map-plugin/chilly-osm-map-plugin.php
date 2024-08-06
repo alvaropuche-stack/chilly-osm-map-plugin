@@ -25,11 +25,24 @@ if (!is_plugin_active('chillypills-wrapper-plugin/chillypills-wrapper-plugin.php
     return;
 }
 
-// Incluir el archivo de control de licencia
-require_once plugin_dir_path(dirname(__FILE__)) . 'chillypills-wrapper-plugin/license-control.php';
+// Leer y validar la licencia global desde plugins.json
+function validate_global_license() {
+    $json_file_path = plugin_dir_path(__FILE__) . '../chillypills-wrapper-plugin/plugins.json';
+    if (file_exists($json_file_path)) {
+        $json_data = file_get_contents($json_file_path);
+        $plugins = json_decode($json_data, true);
+        $global_license_key = $plugins['global_license_key'] ?? '';
 
-// Validar la licencia
-if (!Chillypills_License_Control::validate_license()) {
+        // Aquí puedes realizar una validación de la licencia global
+        // Por ejemplo, podrías hacer una solicitud a un servidor remoto para validar la licencia
+        if ($global_license_key === 'YOUR_GLOBAL_LICENSE_KEY') {
+            return true;
+        }
+    }
+    return false;
+}
+
+if (!validate_global_license()) {
     add_action('admin_notices', 'osm_map_plugin_license_error');
     function osm_map_plugin_license_error() {
         echo '<div class="error"><p>OSM Map Plugin requiere una licencia válida. Por favor, ingrese una licencia válida en la configuración del plugin Chillypills Wrapper.</p></div>';
@@ -122,7 +135,7 @@ function osm_map_plugin_addresses_field_callback() {
 
 // Registrar el widget de Elementor
 function register_osm_map_widget($widgets_manager) {
-    require_once(__DIR__ . '/chilly-osm-map-widget.php');
+    require_once(__DIR__ . '/osm-map-widget.php');
     $widgets_manager->register(new \Elementor_Chillypills_OSM_Map_Widget());
 }
 add_action('elementor/widgets/register', 'register_osm_map_widget');
