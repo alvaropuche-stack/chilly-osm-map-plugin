@@ -213,6 +213,11 @@ class Elementor_Chillypills_OSM_Map_Widget extends \Elementor\Widget_Base {
                         mapbox_token: '<?php echo esc_js($mapbox_token); ?>'
                     };
 
+                    var mapContainer = document.getElementById('osm-map');
+                    if (mapContainer._leaflet_id) {
+                        mapContainer._leaflet_id = null;
+                    }
+
                     var mapCenter = [51.505, -0.09]; // Default center
                     if (settings.locations.length > 0 && settings.locations[0].manual_coordinates === 'yes') {
                         mapCenter = [settings.locations[0].latitude, settings.locations[0].longitude];
