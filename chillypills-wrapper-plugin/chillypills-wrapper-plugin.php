@@ -130,11 +130,11 @@ class Chillypills_Wrapper_Plugin {
                             <td class="column-actions">
                                 <?php if ($plugin_info): ?>
                                     <?php if (is_plugin_active($plugin_file)): ?>
-                                        <a href="<?php echo esc_url(wp_nonce_url('plugins.php?action=deactivate&amp;plugin=' . $plugin_file, 'deactivate-plugin_' . $plugin_file)); ?>" class="button">Desactivar</a>
+                                        <a href="<?php echo esc_url(wp_nonce_url('plugins.php?action=deactivate&plugin=' . $plugin_file, 'deactivate-plugin_' . $plugin_file)); ?>" class="button">Desactivar</a>
                                     <?php else: ?>
-                                        <a href="<?php echo esc_url(wp_nonce_url('plugins.php?action=activate&amp;plugin=' . $plugin_file, 'activate-plugin_' . $plugin_file)); ?>" class="button button-primary">Activar</a>
+                                        <a href="<?php echo esc_url(wp_nonce_url('plugins.php?action=activate&plugin=' . $plugin_file, 'activate-plugin_' . $plugin_file)); ?>" class="button button-primary">Activar</a>
                                     <?php endif; ?>
-                                    <a href="<?php echo esc_url(wp_nonce_url('plugins.php?action=delete-selected&amp;checked[]=' . $plugin_file, 'bulk-plugins')); ?>" class="button button-secondary">Borrar</a>
+                                    <a href="<?php echo esc_url(wp_nonce_url('plugins.php?action=delete-selected&checked[]=' . $plugin_file, 'bulk-plugins')); ?>" class="button button-secondary">Borrar</a>
                                 <?php else: ?>
                                     <form method="post" action="<?php echo esc_url(admin_url('admin-post.php?action=chillypills_download_plugin')); ?>">
                                         <input type="hidden" name="plugin_slug" value="<?php echo esc_attr($plugin_slug); ?>">
