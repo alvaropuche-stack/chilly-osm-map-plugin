@@ -122,7 +122,7 @@ function osm_map_plugin_addresses_field_callback() {
 
 // Registrar el widget de Elementor
 function register_osm_map_widget($widgets_manager) {
-    require_once(__DIR__ . '/osm-map-widget.php');
+    require_once(__DIR__ . '/chilly-osm-map-widget.php');
     $widgets_manager->register(new \Elementor_Chillypills_OSM_Map_Widget());
 }
 add_action('elementor/widgets/register', 'register_osm_map_widget');
