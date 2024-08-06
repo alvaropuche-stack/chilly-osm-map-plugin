@@ -236,4 +236,41 @@ class Elementor_Chillypills_OSM_Map_Widget extends \Elementor\Widget_Base {
         <?php
     }
 }
-?>
+
+// Enqueue script for AJAX token validation
+function chillypills_enqueue_mapbox_token_validation_script() {
+    wp_enqueue_script(
+        'mapbox-token-validation',
+        plugin_dir_url(__FILE__) . 'mapbox-token-validation.js',
+        ['jquery'],
+        false,
+        true
+    );
+    wp_localize_script(
+        'mapbox-token-validation',
+        'mapboxTokenValidation',
+        [
+            'ajax_url' => admin_url('admin-ajax.php'),
+            'mapbox_token' => 'pk.eyJ1IjoiYWx2YXJvcHVjaGUiLCJhIjoiY2xjcTlqa3ZtMDFnNzNwbnB5ejR6NzQ4bCJ9.j2hplYkteh3PWHeDXxbs_Q',
+        ]
+    );
+}
+add_action('wp_enqueue_scripts', 'chillypills_enqueue_mapbox_token_validation_script');
+
+// AJAX handler for token validation
+function chillypills_validate_mapbox_token() {
+    $token = isset($_POST['token']) ? sanitize_text_field($_POST['token']) : '';
+    $response = wp_remote_get("https://api.mapbox.com/styles/v1/mapbox/streets-v11?access_token={$token}");
+    
+    if (is_wp_error($response)) {
+        wp_send_json_error(['message' => 'Error al validar el token']);
+    }
+    
+    $response_code = wp_remote_retrieve_response_code($response);
+    if ($response_code == 200) {
+        wp_send_json_success(['message' => 'El Token de Mapbox está configurado correctamente']);
+    } else {
+        wp_send_json_error(['message' => 'Token inválido']);
+    }
+}
+add_action('wp_ajax_validate_mapbox_token', 'chillypills_validate_mapbox_token');

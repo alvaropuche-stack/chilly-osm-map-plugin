@@ -2,13 +2,18 @@
 /*
 Plugin Name: OSM Map Plugin
 Description: Plugin para mostrar un mapa de OpenStreetMap con direcciones configurables.
-Version: 0.0.3
+Version: 0.0.5
 Author: Álvaro Puche Ortiz x Chillypills Comunicación S.L.
 Author URI: https://chillypills.com
 */
 
 if (!defined('ABSPATH')) {
     exit;
+}
+
+// Incluir plugin.php si la función is_plugin_active no está definida
+if (!function_exists('is_plugin_active')) {
+    include_once(ABSPATH . 'wp-admin/includes/plugin.php');
 }
 
 // Comprobar si el plugin Chillypills Wrapper está activo
