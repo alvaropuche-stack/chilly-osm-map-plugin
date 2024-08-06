@@ -11,7 +11,26 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-require_once plugin_dir_path(dirname(__FILE__)) . '/chillypills-wrapper-plugin/license-control.php';
+// Comprobar si el plugin Chillypills Wrapper está activo
+if (!is_plugin_active('chillypills-wrapper-plugin/chillypills-wrapper-plugin.php')) {
+    add_action('admin_notices', 'osm_map_plugin_dependency_error');
+    function osm_map_plugin_dependency_error() {
+        echo '<div class="error"><p>OSM Map Plugin requiere el plugin Chillypills Wrapper activo.</p></div>';
+    }
+    return;
+}
+
+// Incluir el archivo de control de licencia
+require_once plugin_dir_path(dirname(__FILE__)) . 'chillypills-wrapper-plugin/license-control.php';
+
+// Validar la licencia
+if (!Chillypills_License_Control::validate_license()) {
+    add_action('admin_notices', 'osm_map_plugin_license_error');
+    function osm_map_plugin_license_error() {
+        echo '<div class="error"><p>OSM Map Plugin requiere una licencia válida. Por favor, ingrese una licencia válida en la configuración del plugin Chillypills Wrapper.</p></div>';
+    }
+    return;
+}
 
 // Función para comprobar actualizaciones
 function osm_map_plugin_check_update($transient) {
@@ -20,7 +39,7 @@ function osm_map_plugin_check_update($transient) {
     }
 
     $plugin_name = 'osm-map-plugin';
-    $current_version = '1.0.0';
+    $current_version = '0.0.5';
     $response_data = Chillypills_License_Control::check_update($plugin_name, $current_version);
 
     if ($response_data['success'] && version_compare($response_data['version'], $current_version, '>')) {
