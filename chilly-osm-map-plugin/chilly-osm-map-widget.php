@@ -170,31 +170,33 @@ class Elementor_Chillypills_OSM_Map_Widget extends \Elementor\Widget_Base {
         ?>
         <div id="osm-map" style="width: 100%; height: 500px;"></div>
         <script>
-            var map = L.map('osm-map').setView([51.505, -0.09], 13);
+            document.addEventListener('DOMContentLoaded', function() {
+                var map = L.map('osm-map').setView([51.505, -0.09], 13);
 
-            L.tileLayer('https://api.mapbox.com/styles/v1/mapbox/<?php echo esc_js($map_style); ?>/tiles/{z}/{x}/{y}?access_token=<?php echo esc_js($mapbox_token); ?>', {
-                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://www.mapbox.com/about/maps/">Mapbox</a>',
-                tileSize: 512,
-                zoomOffset: -1,
-            }).addTo(map);
+                L.tileLayer('https://api.mapbox.com/styles/v1/mapbox/<?php echo esc_js($map_style); ?>/tiles/{z}/{x}/{y}?access_token=<?php echo esc_js($mapbox_token); ?>', {
+                    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://www.mapbox.com/about/maps/">Mapbox</a>',
+                    tileSize: 512,
+                    zoomOffset: -1,
+                }).addTo(map);
 
-            var geocoder = L.Control.Geocoder.nominatim();
+                var geocoder = L.Control.Geocoder.nominatim();
 
-            <?php foreach ($locations as $location): ?>
-                <?php if ($location['manual_coordinates'] === 'yes'): ?>
-                    var marker = L.marker([<?php echo esc_js($location['latitude']); ?>, <?php echo esc_js($location['longitude']); ?>]).addTo(map)
-                        .bindPopup('<?php echo esc_js($location['address']); ?>')
-                        .openPopup();
-                <?php else: ?>
-                    geocoder.geocode('<?php echo esc_js($location['address']); ?>', function(results) {
-                        if (results.length) {
-                            var marker = L.marker(results[0].center).addTo(map)
-                                .bindPopup('<?php echo esc_js($location['address']); ?>')
-                                .openPopup();
-                        }
-                    });
-                <?php endif; ?>
-            <?php endforeach; ?>
+                <?php foreach ($locations as $location): ?>
+                    <?php if ($location['manual_coordinates'] === 'yes'): ?>
+                        var marker = L.marker([<?php echo esc_js($location['latitude']); ?>, <?php echo esc_js($location['longitude']); ?>]).addTo(map)
+                            .bindPopup('<?php echo esc_js($location['address']); ?>')
+                            .openPopup();
+                    <?php else: ?>
+                        geocoder.geocode('<?php echo esc_js($location['address']); ?>', function(results) {
+                            if (results.length) {
+                                var marker = L.marker(results[0].center).addTo(map)
+                                    .bindPopup('<?php echo esc_js($location['address']); ?>')
+                                    .openPopup();
+                            }
+                        });
+                    <?php endif; ?>
+                <?php endforeach; ?>
+            });
         </script>
         <?php
     }
@@ -208,30 +210,32 @@ class Elementor_Chillypills_OSM_Map_Widget extends \Elementor\Widget_Base {
         #>
         <div id="osm-map" style="width: 100%; height: 500px;"></div>
         <script>
-            var map = L.map('osm-map').setView([51.505, -0.09], 13);
+            document.addEventListener('DOMContentLoaded', function() {
+                var map = L.map('osm-map').setView([51.505, -0.09], 13);
 
-            L.tileLayer('https://api.mapbox.com/styles/v1/mapbox/{{{ map_style }}}/tiles/{z}/{x}/{y}?access_token={{{ mapbox_token }}}', {
-                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://www.mapbox.com/about/maps/">Mapbox</a>',
-                tileSize: 512,
-                zoomOffset: -1,
-            }).addTo(map);
+                L.tileLayer('https://api.mapbox.com/styles/v1/mapbox/{{{ map_style }}}/tiles/{z}/{x}/{y}?access_token={{{ mapbox_token }}}', {
+                    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://www.mapbox.com/about/maps/">Mapbox</a>',
+                    tileSize: 512,
+                    zoomOffset: -1,
+                }).addTo(map);
 
-            var geocoder = L.Control.Geocoder.nominatim();
+                var geocoder = L.Control.Geocoder.nominatim();
 
-            _.each(locations, function(location) {
-                if (location.manual_coordinates === 'yes') {
-                    var marker = L.marker([location.latitude, location.longitude]).addTo(map)
-                        .bindPopup(location.address)
-                        .openPopup();
-                } else {
-                    geocoder.geocode(location.address, function(results) {
-                        if (results.length) {
-                            var marker = L.marker(results[0].center).addTo(map)
-                                .bindPopup(location.address)
-                                .openPopup();
-                        }
-                    });
-                }
+                _.each(locations, function(location) {
+                    if (location.manual_coordinates === 'yes') {
+                        var marker = L.marker([location.latitude, location.longitude]).addTo(map)
+                            .bindPopup(location.address)
+                            .openPopup();
+                    } else {
+                        geocoder.geocode(location.address, function(results) {
+                            if (results.length) {
+                                var marker = L.marker(results[0].center).addTo(map)
+                                    .bindPopup(location.address)
+                                    .openPopup();
+                            }
+                        });
+                    }
+                });
             });
         </script>
         <?php
